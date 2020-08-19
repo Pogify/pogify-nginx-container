@@ -27,7 +27,12 @@ RUN make install && \
   rm -rf /nginx-1.18.0 /var/cache/apk/ /nginx-push-stream-module && \
   apk del g++ make git
 
+FROM alpine:latest
+COPY --from=build /usr/local/nginx /usr/local/nginx
 COPY nginx.conf /usr/local/nginx/conf/
+
+RUN apk update && \
+  apk add zlib pcre
 
 CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx -g 'daemon off;'"]
 
