@@ -21,11 +21,7 @@ WORKDIR /nginx-1.18.0
 
 RUN ./configure --add-module=../nginx-push-stream-module
 RUN make
-RUN make install && \
-  make clean && \
-  rm -rf /nginx-1.18.0 /var/cache/apk/ /nginx-push-stream-module && \
-  apk del g++ make git
-
+RUN make install
 FROM alpine:latest
 COPY --from=build /usr/local/nginx /usr/local/nginx
 COPY nginx.conf /usr/local/nginx/conf/
