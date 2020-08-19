@@ -30,6 +30,8 @@ RUN make install && \
 FROM alpine:latest
 COPY --from=build /usr/local/nginx /usr/local/nginx
 COPY nginx.conf /usr/local/nginx/conf/
+COPY sysctl.conf /etc/sysctl.conf
+
 
 RUN apk update && \
   apk add zlib pcre
