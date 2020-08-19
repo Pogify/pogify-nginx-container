@@ -1,27 +1,21 @@
 FROM alpine:latest AS build
 
-RUN apk add --no-cache g++ && \
-  apk add --no-cache pcre-dev && \
-  apk add --no-cache zlib-dev && \
-  apk add --no-cache make && \
-  apk add --no-cache git
+ENV NGINX_VERSION=1.19.2
 
-# nginx version 1.18.0
-RUN wget http://nginx.org/download/nginx-1.18.0.tar.gz && tar xzvf nginx-1.18.0.tar.gz
+RUN apk add --no-cache g++ pcre-dev zlib-dev make git
 
-# nginx-push-stream-module lastest
+# nginx
+RUN wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar xzvf nginx-${NGINX_VERSION}.tar.gz && rm -rf *.tar.gz
+
+# nginx-push-stream-module latest
 RUN git clone https://github.com/wandenberg/nginx-push-stream-module.git
 
-# remove *.tar.gz
-RUN rm -rf *.tar.gz
+WORKDIR /nginx-${NGINX_VERSION}
 
-WORKDIR /nginx-1.18.0
+# configure and build
 
-# configure 
+RUN ./configure --add-module=../nginx-push-stream-module && make && make install
 
-RUN ./configure --add-module=../nginx-push-stream-module
-RUN make
-RUN make install
 FROM alpine:latest
 COPY --from=build /usr/local/nginx /usr/local/nginx
 COPY nginx.conf /usr/local/nginx/conf/
@@ -32,8 +26,6 @@ RUN apk update && \
   apk add zlib pcre
 
 CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx"]
-
-
 
 
 EXPOSE 80/tcp 443/tcp 1935/tcp
