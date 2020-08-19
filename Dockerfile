@@ -34,7 +34,7 @@ COPY nginx.conf /usr/local/nginx/conf/
 RUN apk update && \
   apk add zlib pcre
 
-CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx"]
 
 
 
