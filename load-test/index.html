@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://pagecdn.io/lib/mathjs/7.1.0/math.min.js"></script>
+  <script>
+    console.log("ac");
+
+    let max = 5;
+    let connections = [];
+
+    function publishMessage() {
+      axios.post("http://161.35.120.197/pub?id=test", "abc");
+    }
+
+    function makeConnections() {
+      document.getElementById("status").innerHTML += `queuing ${max}<br>`;
+      axios.post("/queue/" + `${max}`);
+      document.getElementById("status").innerHTML += `queued ${max}<br>`;
+    }
+    async function runTest() {
+      let elem = document.getElementById("status");
+      elem.innerHTML += `testing ${max}<br>`;
+      let res = await axios.post("/test/" + `${max}`);
+      console.log(res.data);
+      elem.innerHTML += `tested ${max}<br>`;
+      elem.innerHTML += `results: arr: ${res.data.join(", ")}<br>`;
+      elem.innerHTML += `results: mean: ${math.mean(res.data)}<br>`;
+    }
+
+    async function closeConnections() {}
+  </script>
+</head>
+<body>
+  <button onclick="publishMessage()">publish test</button>
+  <button onclick="makeConnections()">make connections</button>
+  <button onclick="runTest()">Run Test</button>
+  <button onclick="closeConnections()">close</button>
+  <div>status:</div>
+  <div id="status"></div>
+</body>
