@@ -14,7 +14,7 @@ WORKDIR /nginx-${NGINX_VERSION}
 
 # configure and build
 
-RUN ./configure --add-module=../nginx-push-stream-module && make && make install
+RUN ./configure --add-module=../nginx-push-stream-module --with-http_auth_request_module && make && make install
 
 FROM alpine:latest
 COPY --from=build /usr/local/nginx /usr/local/nginx
