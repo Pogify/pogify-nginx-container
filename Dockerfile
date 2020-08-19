@@ -1,7 +1,10 @@
-FROM ubuntu:latest AS build
+FROM alpine:latest AS build
 
-RUN apt-get update && apt-get install build-essential wget git libpcre3 libpcre3-dev zlib1g openssl -y
-RUN apt-get install zlib1g-dev -y
+RUN apk add --no-cache g++ && \
+  apk add --no-cache pcre-dev && \
+  apk add --no-cache zlib-dev && \
+  apk add --no-cache make && \
+  apk add --no-cache git
 
 # nginx version 1.18.0
 RUN wget http://nginx.org/download/nginx-1.18.0.tar.gz && tar xzvf nginx-1.18.0.tar.gz
@@ -19,17 +22,14 @@ WORKDIR /nginx-1.18.0
 
 RUN ./configure --add-module=../nginx-push-stream-module
 RUN make
-RUN make install
+RUN make install && \
+  make clean && \
+  rm -rf /nginx-1.18.0 /var/cache/apk/ /nginx-push-stream-module && \
+  apk del g++ make git
 
-# CMD ["nginx", "-g", "daemon off;"]
+COPY nginx.conf /usr/local/nginx/conf/
 
-FROM alpine:latest
-COPY --from=build /usr/local/nginx/ /nginx/
-RUN ls /nginx/
-WORKDIR /
-
-
-ENTRYPOINT ["/nginx/sbin/nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx -g 'daemon off;'"]
 
 
 
