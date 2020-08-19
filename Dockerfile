@@ -12,7 +12,6 @@ RUN wget http://nginx.org/download/nginx-1.18.0.tar.gz && tar xzvf nginx-1.18.0.
 # nginx-push-stream-module lastest
 RUN git clone https://github.com/wandenberg/nginx-push-stream-module.git
 
-RUN ls
 # remove *.tar.gz
 RUN rm -rf *.tar.gz
 
