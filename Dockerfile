@@ -17,15 +17,20 @@ WORKDIR /nginx-${NGINX_VERSION}
 RUN ./configure --add-module=../nginx-push-stream-module --with-http_auth_request_module && make && make install
 
 FROM alpine:latest
+
+ENV PUBSUB_SECRET=${PUBSUB_SECRET:-""}
+
 COPY --from=build /usr/local/nginx /usr/local/nginx
-COPY nginx.conf /usr/local/nginx/conf/
+COPY nginx.conf.template /usr/local/nginx/conf/
+COPY set-env-in-nginx-config.sh /
+RUN chmod +x /set-env-in-nginx-config.sh
 COPY sysctl.conf /etc/sysctl.conf
 
 
 RUN apk update && \
-  apk add zlib pcre
+  apk add zlib pcre gettext
 
-CMD ["/bin/sh", "-c", "/usr/local/nginx/sbin/nginx"]
+CMD ["/bin/sh", "-c", "/set-env-in-nginx-config.sh" , "&&", "/usr/local/nginx/sbin/nginx"]
 
 
-EXPOSE 80/tcp 443/tcp 1935/tcp
+EXPOSE 80/tcp 443/tcp
