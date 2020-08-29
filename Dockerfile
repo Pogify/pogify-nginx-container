@@ -30,7 +30,7 @@ COPY sysctl.conf /etc/sysctl.conf
 RUN apk update && \
   apk add zlib pcre gettext
 
-CMD ["/bin/sh", "-c", "/set-env-in-nginx-config.sh" , "&&", "/usr/local/nginx/sbin/nginx"]
+CMD ["/bin/sh", "-c", "/set-env-in-nginx-config.sh && /usr/local/nginx/sbin/nginx"]
 
 
 EXPOSE 80/tcp 443/tcp
