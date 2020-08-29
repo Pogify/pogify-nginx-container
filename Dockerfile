@@ -25,6 +25,7 @@ COPY nginx.conf.template /usr/local/nginx/conf/
 COPY set-env-in-nginx-config.sh /
 RUN chmod +x /set-env-in-nginx-config.sh
 COPY sysctl.conf /etc/sysctl.conf
+COPY limits.conf /etc/security/
 
 
 RUN apk update && \

@@ -16,23 +16,28 @@ class Counter extends EventEmitter {
 
 let counter = new Counter();
 
-function publishMessage() {
+function publishMessage(id: string) {
   axios.post("http://167.172.157.251/pub?id=test", "abc", {
     headers: {
-      Authorization: process.env.SHARED_SECRET,
+      Authorization: "thisisasecret",
     },
   });
-  // axios.post("http://localhost:8080/pub?id=test", "abc");
+  // axios.post(`http://localhost:8081/pub?id=${id}`, "abc", {
+  //   headers: {
+  //     Authorization: "thisisascret",
+  //   },
+  // });
 }
 
 async function makeConnections(
   max: number,
   counter: Counter,
-  connections: http.ClientRequest[]
+  connections: http.ClientRequest[],
+  id: string
 ) {
   for (let i = 0; i < max; i++) {
     console.log(i);
-    let one = await makeOne(counter);
+    let one = await makeOne(counter, id);
     if (stop) {
       break;
     }
@@ -43,18 +48,19 @@ async function makeConnections(
 
 async function closeConnections(connections: http.ClientRequest[]) {
   for (let connection of connections) {
-    connection.end();
+    console.log("end");
+    connection.destroy();
   }
   connections = [];
 }
 
-function makeOne(counter: Counter): Promise<http.ClientRequest> {
+function makeOne(counter: Counter, id: string): Promise<http.ClientRequest> {
   return new Promise((resolve, reject) => {
     let one = http
       .get(
         {
           agent: false,
-          path: "/sub/test",
+          path: `/sub/test`,
           hostname: "167.172.157.251",
           // hostname: "localhost",
           // port: "8080",
@@ -63,6 +69,7 @@ function makeOne(counter: Counter): Promise<http.ClientRequest> {
         (res) => {
           res.on("data", (data) => {
             counter.inc();
+            one.shouldKeepAlive = false;
           });
           res.on("error", console.log);
           resolve(one);
@@ -70,7 +77,7 @@ function makeOne(counter: Counter): Promise<http.ClientRequest> {
       )
       .on("error", (error) => {
         console.log(error);
-        makeOne(counter).then((one) => resolve(one));
+        makeOne(counter, id).then((one) => resolve(one));
       });
   });
 }
@@ -93,22 +100,23 @@ app.get("/", (req, res) => {
 // });
 
 app.post("/test/:num", async (req, res) => {
+  let id = `${Date.now()}`;
   let counter = new Counter();
   let conns: http.ClientRequest[] = [];
-  await makeConnections(parseInt(req.params.num), counter, conns);
+  await makeConnections(parseInt(req.params.num), counter, conns, id);
   counter.count = 0;
   let t0 = Date.now();
   let retArr: number[] = [];
   counter.on("INC", (count) => {
     retArr.push(Date.now() - t0);
     if (count === parseInt(req.params.num)) {
-      closeConnections(conns);
+      // closeConnections(conns);
       counter.removeAllListeners("INC");
       res.send(retArr);
     }
   });
 
-  await publishMessage();
+  await publishMessage(id);
 });
 
 app.listen(5500);
