@@ -35,7 +35,7 @@ do
 	
 		# Sends in the background
 		curl \
-			--header "Content-Type: application/json" \
+			--header "Content-Type: text/plain" \
 			--header "Authorization: $2" \
 			--header "HOST: messages.pogify.net" \
 			--request POST \
