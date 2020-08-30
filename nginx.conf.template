@@ -1,13 +1,8 @@
 
-#user  nobody;
 worker_processes  auto;
 worker_rlimit_nofile 100000;
 daemon off;
 error_log stderr info;
-
-
-#pid        logs/nginx.pid;
-
 
 events {
     worker_connections  90000;
@@ -16,29 +11,23 @@ events {
 
 
 http {
-    	
     access_log /dev/stdout;
 
-    push_stream_message_ttl 1h;
-    push_stream_shared_memory_size 700M;
-    # push_stream_max_subscribers_per_channel 30000;
+    nchan_message_timeout 1h;
     # Prevent closing channels too fast
-    push_stream_channel_inactivity_time 1h;
+    nchan_channel_timeout 1h;
 
-    push_stream_max_messages_stored_per_channel 1;
+    nchan_shared_memory_size 700M;
+
+    # Only store 1 message at a time
+    nchan_message_buffer_length 1;
+
     # define publisher and subscriber endpoints in your server context
     server { 
-        listen 80 backlog=1024 reuseport;      
+        listen 80 backlog=1024 reuseport;
+
         location / {
             return 204;
-        }
-
-        location /channels-stats {
-            # activate channels statistics mode for this location
-            push_stream_channels_statistics;
-
-            # query string based channel id
-            push_stream_channels_path               $arg_id;
         }
 
 
@@ -46,30 +35,30 @@ http {
             # authenticate request
             auth_request /auth;
 
-            # activate publisher (admin) mode for this location
-            push_stream_publisher admin;
-            push_stream_store_messages on;
+            # activate publisher mode for this location
+            nchan_publisher;
 
             # query string based channel id
-            push_stream_channels_path               $arg_id;
+            nchan_channel_id $arg_id;
 
             # cors headers
-            push_stream_allowed_origins *;
+            nchan_access_control_allow_origin *;
         }
 
         location ~ /sub/(.*) {
             keepalive_requests 10000;
-            # activate event source mode for this location
-            push_stream_subscriber eventsource;
-            add_header Content-Type "text/event-stream" always;
-            add_header Access-Control-Allow-Origin *;
-            # positional channel path
-            push_stream_channels_path                   $1;
-            # message template
-            push_stream_message_template                ~text~;
-            push_stream_authorized_channels_only on;
-            # ping frequency
-            # push_stream_ping_message_interval           2s;
+            # activate event source mode for this location (and websocket as a backup)
+            nchan_subscriber eventsource websocket;
+            #add_header Content-Type "text/event-stream" always;
+            nchan_access_control_allow_origin *;
+            # positional channel path (and group, for stats)
+            nchan_channel_id $1;
+
+            # Don't allow subscribing to non-existing channels
+            nchan_subscribe_existing_channels_only on;
+
+            # Send last message when subscribing
+            nchan_subscriber_first_message 1;
         }
 
         location /auth {

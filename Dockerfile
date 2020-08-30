@@ -2,19 +2,19 @@ FROM alpine:latest AS build
 
 ENV NGINX_VERSION=1.19.2
 
-RUN apk add --no-cache g++ pcre-dev zlib-dev make git
+RUN apk add --no-cache g++ pcre-dev openssl-dev zlib-dev make git
 
 # nginx
 RUN wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar xzvf nginx-${NGINX_VERSION}.tar.gz && rm -rf *.tar.gz
 
 # nginx-push-stream-module latest
-RUN git clone https://github.com/wandenberg/nginx-push-stream-module.git
+RUN git clone https://github.com/slact/nchan.git
 
 WORKDIR /nginx-${NGINX_VERSION}
 
 # configure and build
 
-RUN ./configure --add-module=../nginx-push-stream-module --with-http_auth_request_module && make && make install
+RUN ./configure --add-module=../nchan --with-http_auth_request_module --with-http_ssl_module --with-http_v2_module && make && make install
 
 FROM alpine:latest
 
