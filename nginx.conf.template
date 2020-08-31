@@ -64,7 +64,7 @@ http {
             nchan_channel_id $1;
 
             # Don't allow subscribing to non-existing channels
-            nchan_subscribe_existing_channels_only off;
+            nchan_subscribe_existing_channels_only on;
 
             # Send last message when subscribing
             nchan_subscriber_first_message 1;
