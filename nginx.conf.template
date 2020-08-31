@@ -25,9 +25,6 @@ http {
     # define publisher and subscriber endpoints in your server context
     server { 
         listen 80 backlog=1024 reuseport;
-
-        # Backward compatibility with old modulle
-        rewrite ^/sub/(.*).b([0-9]*) http://$host/sub/$1 permanent;
      
         location / {
             return 204;
@@ -48,17 +45,26 @@ http {
             nchan_access_control_allow_origin *;
         }
 
+        # Backward compatibility with old module
+        location ~ /sub/(.*).b[0-9]*{
+            add_header Access-Control-Allow-Origin *;
+            rewrite ^/sub/(.*).b[0-9]* http://$host/sub/$1 permanent;
+        }
+
         location ~ /sub/(.*) {
             keepalive_requests 10000;
+
+            nchan_access_control_allow_origin *;
+
             # activate event source mode for this location (and websocket as a backup)
             nchan_subscriber eventsource websocket;
             #add_header Content-Type "text/event-stream" always;
-            nchan_access_control_allow_origin *;
-            # positional channel path (and group, for stats)
+
+            # positional channel path
             nchan_channel_id $1;
 
             # Don't allow subscribing to non-existing channels
-            nchan_subscribe_existing_channels_only on;
+            nchan_subscribe_existing_channels_only off;
 
             # Send last message when subscribing
             nchan_subscriber_first_message 1;

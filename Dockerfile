@@ -20,16 +20,16 @@ FROM alpine:latest
 
 ENV PUBSUB_SECRET=${PUBSUB_SECRET:-""}
 
+RUN apk update && \
+  apk add zlib pcre gettext
+
 COPY --from=build /usr/local/nginx /usr/local/nginx
-COPY nginx.conf.template /usr/local/nginx/conf/
-COPY set-env-in-nginx-config.sh /
-RUN chmod +x /set-env-in-nginx-config.sh
 COPY sysctl.conf /etc/sysctl.conf
 COPY limits.conf /etc/security/
 
-
-RUN apk update && \
-  apk add zlib pcre gettext
+COPY nginx.conf.template /usr/local/nginx/conf/
+COPY set-env-in-nginx-config.sh /
+RUN chmod +x /set-env-in-nginx-config.sh
 
 CMD ["/bin/sh", "-c", "/set-env-in-nginx-config.sh && /usr/local/nginx/sbin/nginx"]
 
