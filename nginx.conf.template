@@ -26,6 +26,9 @@ http {
     server { 
         listen 80 backlog=1024 reuseport;
 
+        # Backward compatibility with old modulle
+        rewrite ^/sub/(.*).b([0-9]*) http://$host/sub/$1 permanent;
+     
         location / {
             return 204;
         }
