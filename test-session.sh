@@ -36,8 +36,8 @@ do
 			--request POST \
 			--data "$data" \
 			$3 \
-#			&> /dev/null \
-#			&
+			&> /dev/null \
+			&
 	done
 done
 
