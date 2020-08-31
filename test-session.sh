@@ -1,16 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ "$1" = "" ] || [ "$1" = "-h" ]; then
+if [ $1 = "" ] || [ $1 = "-h" ]; then
 	printf "
+
 Pogify loop sender
+
 Usage:
-	./looper.bash <json> <authorization header (secret)> <endpoint>
+	./test-session.sh json authorization endpoint
+
 Prerequisites:
-	sleep
-	date
-	awk
-	curl
-	jq
+	apt install jq
 "
 	exit
 fi
@@ -22,26 +21,23 @@ do
 	do
 		timestamp=$( echo $data | jq .timestamp )
 		if [ $timestamp -ge $running_stamp ]; then
-			# sleep $(perl -e "print $timestamp/1000")
-			sleep $(echo "$timestamp" | awk '{res = $1/1000;print res}')
+			sleep "$(( ($timestamp - $running_stamp) / 1000 ))"
 		fi
 	
 		running_stamp=$timestamp
-		
-		# Changes the json's timestamp to timestamp in milisecs
-		changed=$(\
-	       	echo $data |\
-	       	jq ".timestamp = $(($(date +%s%N)/1000000))")
-	
+		now=$( date +%s%3N )
+		data=$( echo $data | jq --compact-output --arg now "$now" '.timestamp = $now')
 		# Sends in the background
 		curl \
+			-k \
 			--header "Content-Type: text/plain" \
 			--header "Authorization: $2" \
 			--header "HOST: messages.pogify.net" \
 			--request POST \
-			--data "$changed" \
+			--data "$data" \
 			$3 \
-			&> /dev/null \
-			&
+#			&> /dev/null \
+#			&
 	done
 done
+
