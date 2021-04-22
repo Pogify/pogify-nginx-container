@@ -17,12 +17,15 @@ http {
     # Prevent closing channels too fast
     nchan_channel_timeout 1h;
 
-    nchan_shared_memory_size 700M;
+    nchan_shared_memory_size 1G;
 
     # Only store 1 message at a time
     nchan_message_buffer_length 1;
 
     # define publisher and subscriber endpoints in your server context
+    upstream my_redis_server {
+        nchan_redis_server "${REDIS_SERVER}";
+    }
     server { 
         listen 80 backlog=1024 reuseport;
      
@@ -30,6 +33,9 @@ http {
             return 204;
         }
 
+        location /nchan_stub_status {
+            nchan_stub_status;
+        }
 
         location /pub {
             # authenticate request
@@ -42,19 +48,14 @@ http {
             nchan_channel_id $arg_id;
 
             # cors headers
-            nchan_access_control_allow_origin *;
-        }
+            nchan_access_control_allow_origin '*';
 
-        # Backward compatibility with old module
-        location ~ /sub/(.*).b[0-9]*{
-            add_header Access-Control-Allow-Origin *;
-            rewrite ^/sub/(.*).b[0-9]* http://$host/sub/$1 permanent;
+            # redis DB
+            nchan_redis_pass my_redis_server;
         }
 
         location ~ /sub/(.*) {
             keepalive_requests 10000;
-
-            nchan_access_control_allow_origin *;
 
             # activate event source mode for this location (and websocket as a backup)
             nchan_subscriber eventsource websocket;
@@ -68,6 +69,8 @@ http {
 
             # Send last message when subscribing
             nchan_subscriber_first_message 1;
+            # redis DB
+            nchan_redis_pass my_redis_server;
         }
 
         location /auth {
@@ -79,3 +82,4 @@ http {
 
     }
 }
+

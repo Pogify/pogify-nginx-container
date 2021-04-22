@@ -19,6 +19,7 @@ RUN ./configure --add-module=../nchan --with-http_auth_request_module --with-htt
 FROM alpine:latest
 
 ENV PUBSUB_SECRET=${PUBSUB_SECRET:-""}
+ENV REDIS_SERVER=${REDIS_SERVER:-""}
 
 RUN apk update && \
   apk add zlib pcre gettext
@@ -34,4 +35,4 @@ RUN chmod +x /set-env-in-nginx-config.sh
 CMD ["/bin/sh", "-c", "/set-env-in-nginx-config.sh && /usr/local/nginx/sbin/nginx"]
 
 
-EXPOSE 80/tcp 443/tcp
+EXPOSE 80/tcp
